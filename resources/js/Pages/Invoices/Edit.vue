@@ -1,10 +1,24 @@
+<script>
+import dayjs from "dayjs";
+import relativeTime from "dayjs/plugin/relativeTime";
+dayjs.extend(relativeTime);
+
+const formatDate = (
+  dt,
+  format = "DD/MM/YYYY"
+) => {
+  if (!dt) return null;
+  return dayjs(dt).format(format);
+};
+</script>
+
+
 <script setup>
-import { FwbInput, FwbSelect, FwbButton } from 'flowbite-vue'
-
-import { reactive } from 'vue'
+import { reactive, toRefs } from 'vue'
 import { router } from '@inertiajs/vue3'
+import AuthenticatedLayout from '../../Layouts/AuthenticatedLayout.vue'
 
-defineProps({
+const props = defineProps({
   invoice: {
     type: Object,
     default: null,
@@ -28,12 +42,6 @@ let draftItem = {
   quantity: "",
   total: "",
 }
-
-const countries = [
-  { value: 'us', name: 'United States' },
-  { value: 'ca', name: 'Canada' },
-  { value: 'fr', name: 'France' },
-]
 
 const addItem = (item) => {
   form.items = [...form.items, item];
@@ -69,6 +77,8 @@ const getTotalCost = () => {
   return invoiceGross;
 };
 
+const { invoice } = toRefs(props);
+
 let form = reactive({
   date: invoice
     ? formatDate(invoice.date, "YYYY-MM-DD")
@@ -76,7 +86,7 @@ let form = reactive({
   due_date: invoice
     ? formatDate(invoice.due_date, "YYYY-MM-DD")
     : formatDate(Date.now(), "YYYY-MM-DD"),
-  client_id: invoice ? invoice.client.id : null,
+  client_id: invoice ? invoice.client_id : null,
   invoice_no: invoice ? invoice.invoice_no : "",
   details: invoice ? invoice.details : "",
   subtotal: invoice ? invoice.subtotal : 0,
@@ -88,29 +98,13 @@ let form = reactive({
   items: [],
 });
 
-// Updating
-if (invoice && update_url) {
-  console.log("updating");
-  method = "patch";
-  actionUrl = update_url;
-  invoice.items.map((item) => {
-    $form.items = [...$form.items, item];
-  });
-}
-// Creating
-else if (store_url) {
-  console.log("Creating");
-  method = "post";
-  actionUrl = store_url;
-}
-
 const reset = () => {
   form.reset();
   form.items = [];
 };
 
 function submit() {
-  router.submit(method, actionUrl, {
+  router.post(route('invoices.update', invoice.id), form, {
     onError: (err) => {
       console.log(err);
       toast.error("Error while saving");
@@ -130,121 +124,151 @@ function submit() {
 </script>
 
 <template>
-  <div class="h-full page-header">
-    <div class="my-2 flex items-center w-full">
-      <div class="flex items-center justify-between gap-4 md:gap-4 w-full">
-        <div class="flex items-center gap-6">
-          <div class="flex items-baseline gap-3">
-            <h1 class="font-mono font-semibold text-lg text-gray-800">
-              New Invoice
-            </h1>
-          </div>
-        </div>
-      </div>
-    </div>
-    <div class="flex flex-col gap-2 relative h-full">
-      <div class="flex flex-col w-full bg-white border rounded-md">
 
-        <form @submit.prevent="submit" class="flex flex-col gap-3 w-full p-4 rounded-md">
-          <div class="flex flex-col">
-            <div class="flex">
-              <fwb-select v-model="form.client_id" :options="countries" label="Customer" />
-              <fwb-input v-model="form.date" label="Date" type="date" required />
-              <fwb-input v-model="form.due_date" label="Due Date" type="date" required />
+  <Head title="Dashboard" />
+  <AuthenticatedLayout>
+    <template #header>
+      <h2 class="font-semibold text-xl text-gray-800 leading-tight">New Invoice</h2>
+    </template>
+
+    <div class="h-full max-w-7xl mx-auto">
+
+      <div class="flex flex-col gap-2 relative h-full mx-auto">
+
+        <div class="" v-if="clients">
+          <option v-for="item in clients" :value="item.id">{{ item.name }}</option>
+        </div>
+
+        <form @submit.prevent="submit()" class="flex flex-col gap-3 p-4 rounded-md">
+          <div class="flex flex-col gap-3">
+            <div class="flex gap-2">
+              <div class="flex flex-col w-full">
+                <label>Client</label>
+                <select v-model="form.client_id">
+                  <option>Select</option>
+                  <div class="" v-if="clients">
+                    <option v-for="item in clients" :value="item.id">{{ item.name }}</option>
+                  </div>
+                </select>
+              </div>
+
+              <div class="flex flex-col w-full">
+                <label>Date</label>
+                <input v-model="form.date" label="Date" type="date" required />
+              </div>
+
+              <div class="flex flex-col w-full">
+                <label>Due Date</label>
+                <input v-model="form.due_date" type="date" required />
+              </div>
             </div>
-            <div class="flex">
-              <fwb-input v-model="form.invoice_no" label="Invoice No." required />
-              <fwb-input v-model="form.details" label="Details" required />
+            <div class="flex gap-2">
+              <div class="flex flex-col w-full">
+                <label>Invoice no.</label>
+                <input v-model="form.invoice_no" label="Invoice No." required />
+              </div>
+              <div class="flex flex-col w-full">
+                <label>Details</label>
+                <input v-model="form.details" label="Details" />
+              </div>
             </div>
+          </div>
+
+
+          <div class="h-full overflow-auto flex flex-col gap-2 rounded-md">
+            <div class="">
+              Items
+            </div>
+            <table class="table border border-gray-300 bg-white rounded-lg rounded-b-md w-full">
+              <thead class="p-4 text-xs bg-gray-200 font-bold">
+                <th class="px-4 py-2 font-bold">Description</th>
+                <th class="px-4 py-2 font-bold">Unit cost</th>
+                <th class="px-4 py-2 font-bold">Quantity</th>
+                <th class="px-4 py-2 font-bold">Total</th>
+                <th class="px-4 py-2 font-bold" />
+              </thead>
+              <tbody>
+                <tr class="h-14">
+                  <td class="p-0 font-normal w-full">
+                    <input v-model="draftItem.particulars" class="w-full h-8 mx-2" placeholder="Item" />
+                  </td>
+                  <td class="p-0 font-normal">
+                    <input v-model="draftItem.unit_cost" type="number" class=" h-8 mx-2" placeholder="Cost" />
+                  </td>
+                  <td class="p-0 font-normal">
+                    <input v-model="draftItem.quantity" type="number" class=" h-8 mx-2" placeholder="Quantity" />
+                  </td>
+                  <td class="p-0 font-normal">
+                  </td>
+                  <td class="p-0 mx-auto">
+                    <a class="px-3 py-1 mr-1 block rounded bg-gray-300" @click="addItem()">
+                      <span class="text-gray-800">
+                        Save
+                      </span>
+                    </a>
+                  </td>
+                </tr>
+                <tr v-if="form.items.length > 0" v-for="(item, index) in form.items">
+                  <td class="p-0 font-normal">
+                    <div class="flex px-4 justify-start">
+                      {{ item.particulars }}
+                    </div>
+                  </td>
+                  <td class="p-0 font-normal">
+                    <div class="flex px-4">
+                      {{ item.unit_cost }}
+                    </div>
+                  </td>
+                  <td class="p-0 font-normal">
+                    <div class="flex px-4">
+                      {{ item.quantity }}
+                    </div>
+                  </td>
+                  <td class="p-0 font-normal">
+                    <div class="flex px-4">
+                      {{ item.total }}
+                    </div>
+                  </td>
+                </tr>
+
+              </tbody>
+              <tfoot v-if="form.items.length > 0">
+                <tr class="font-semibold text-gray-900 dark:text-white">
+                  <th scope="row" class="py-3 px-6 text-base" />
+                  <td class=""></td>
+                  <td class=""></td>
+                  <td class="">{{ invoiceTotal }}</td>
+                  <td class="py-3 px-2" />
+                </tr>
+              </tfoot>
+            </table>
+          </div>
+
+          <div class="w-full">
+            <div class="flex flex-col gap-2">
+              <div class="flex flex-col w-full">
+                <label>Invoice Terms</label>
+                <textarea v-model="form.terms" label="Invoice No." />
+              </div>
+              <div class="flex flex-col w-full">
+                <label>Payment information</label>
+                <textarea v-model="form.payment_info" />
+              </div>
+            </div>
+          </div>
+
+          <div class="flex items-center justify-end gap-2 mt-6 p-4">
+            <button class="bg-gray-200 px-4 py-2 rounded">
+              Cancel
+            </button>
+            <button class="bg-gray-800 text-white px-4 py-2 rounded" type="submit">
+              Save
+            </button>
           </div>
         </form>
       </div>
 
-      <div class="w-[99vw] h-full overflow-auto bg-white mx-auto rounded-md">
-        <fwb-button color="default">Add</fwb-button>
-        <table class="table border border-gray-300 rounded-lg rounded-b-md h-full">
-          <thead class="p-4 text-xs bg-gray-200 font-bold">
-            <th class="px-4 py-2 font-bold">Description</th>
-            <th class="px-4 py-2 font-bold">Unit cost</th>
-            <th class="px-4 py-2 font-bold">Quantity</th>
-            <th class="px-4 py-2 font-bold">Total</th>
-            <th class="px-4 py-2 font-bold" />
-          </thead>
-          <tbody>
-            <tr v-if="form.items.length > 0" v-for="(item, index) in form.items">
-              <td class="p-0 font-normal">
-                <div class="flex px-4">
-                  {(item.particulars)}
-                </div>
-              </td>
-              <td class="p-0 font-normal">
-                <div class="flex px-4">
-                  {(item.unit_cost)}
-                </div>
-              </td>
-              <td class="p-0 font-normal">
-                <div class="flex px-4">
-                  {(item.quantity)}
-                </div>
-              </td>
-              <td class="p-0 font-normal">
-                <div class="flex px-4">
-                  {(item.total)}
-                </div>
-              </td>
-            </tr>
-            <tr v-if="draftItem">
-              <td class="p-0 font-normal">
-                <fwb-input v-model="draftItem.particulars" required />
-              </td>
-              <td class="p-0 font-normal">
-                <fwb-input v-model="draftItem.unit_cost" onchange="calculate(draftItem)" required />
-              </td>
-              <td class="p-0 font-normal">
-                <fwb-input v-model="draftItem.quantity" required />
-              </td>
-              <td class="p-0 font-normal">
-                <fwb-input v-model="draftItem.total" required />
-              </td>
-              <td class="p-0 mx-auto">
-                <Button class="p-1 mx-auto px-4" color="none" onClick="addItem()">
-                  <span class="text-red-600">
-                    <SvgIcon type="mdi" path={mdiDeleteOutline} />
-                  </span>
-                </Button>
-              </td>
-            </tr>
-            {/each}
-            {:else}
-            <tr class="text-center py-4">
-              <td colspan="7">Select an item</td>
-            </tr>
-            {/if}
-          </tbody>
-          {#if items.length > 0}
-          <tfoot>
-            <tr class="font-semibold text-gray-900 dark:text-white">
-              <th scope="row" class="py-3 px-6 text-base" />
-              <td class="py-3 px-2 m-0 text-right border">{formatCurrencyRaw(totalCost)}</td>
-              <td class="py-3 px-2 m-0 text-right border">{formatCurrencyRaw(totalSelling)}</td>
-              <td class="py-3 px-2 m-0 text-right border">{formatCurrencyRaw(totalMarkup)}</td>
-              <td class="py-3 px-2 m-0 text-right border">{totalQty} items</td>
-              <!-- <td class="py-3 px-2" /> -->
-              <td class="py-3 px-2 m-0 text-right border">{formatCurrencyRaw(purchaseTotal)}</td>
-              <td class="py-3 px-2" />
-            </tr>
-          </tfoot>
-          {/if}
-        </table>
-      </div>
     </div>
-    <div class="flex items-center gap-2">
-      <fwb-button color="light">
-        Reset
-      </fwb-button>
-      <fwb-button>
-        Save
-      </fwb-button>
-    </div>
-  </div>
+  </AuthenticatedLayout>
+
 </template>

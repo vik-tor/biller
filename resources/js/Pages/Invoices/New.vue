@@ -13,7 +13,7 @@ const formatDate = (
 </script>
 
 <script setup>
-import { reactive } from 'vue'
+import { reactive, toRefs } from 'vue'
 import { Head, router } from '@inertiajs/vue3'
 import AuthenticatedLayout from '../../Layouts/AuthenticatedLayout.vue'
 
@@ -34,13 +34,10 @@ function Item(particulars, unit_cost, quantity) {
   this.total = quantity * unit_cost
 }
 
-const countries = [
-  { value: 'us', name: 'United States' },
-  { value: 'ca', name: 'Canada' },
-  { value: 'fr', name: 'France' },
-]
+const props = defineProps(['clients', 'companies'])
+const { clients } = toRefs(props);
 
-defineProps(['clients', 'companies'])
+console.log(clients.value)
 
 function addItem() {
   if (draftItem.particulars == "" || draftItem.unit_cost == 0) {
@@ -126,22 +123,17 @@ function submit() {
     <div class="h-full max-w-7xl mx-auto">
 
       <div class="flex flex-col gap-2 relative h-full mx-auto">
-
-        <div class="" v-if="clients">
-          <option v-for="item in clients" :value="item.id">{{ item.name }}</option>
-        </div>
-
         <form @submit.prevent="submit()" class="flex flex-col gap-3 p-4 rounded-md">
           <div class="flex flex-col gap-3">
             <div class="flex gap-2">
-              <div class="flex flex-col w-full">
-                <label>Client</label>
-                <select v-model="form.client_id">
-                  <option>Select</option>
-                  <div class="" v-if="clients">
+              <div class="w-full" v-if="clients">
+                <div class="flex flex-col w-full">
+                  <label>Client</label>
+                  <select v-model="form.client_id" class="w-full">
+                    <option>Select</option>
                     <option v-for="item in clients" :value="item.id">{{ item.name }}</option>
-                  </div>
-                </select>
+                  </select>
+                </div>
               </div>
 
               <div class="flex flex-col w-full">
