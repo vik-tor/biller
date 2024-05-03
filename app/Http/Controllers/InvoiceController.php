@@ -64,7 +64,7 @@ class InvoiceController extends Controller
 
     DB::commit();
 
-    return $invoice;
+    return redirect('/');
   }
 
   /**
@@ -105,7 +105,7 @@ class InvoiceController extends Controller
 
     $invoice->update($request->all());
 
-    return $invoice;
+    return redirect('/');
   }
 
   /**

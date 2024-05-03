@@ -21,7 +21,7 @@ defineProps(['clients'])
     <template #header>
       <div class="flex justify-between items-center">
         <h2 class="font-semibold text-xl text-gray-800 leading-tight">Clients</h2>
-        <Link :href="route('invoices.create')" class="bg-gray-800 text-white rounded py-1 px-4">New Client</Link>
+        <Link :href="route('clients.create')" class="bg-gray-800 text-white rounded py-1 px-4">New Client</Link>
       </div>
 
     </template>
@@ -37,6 +37,7 @@ defineProps(['clients'])
                 <th class="border">Name</th>
                 <th class="border">Email</th>
                 <th class="border">Phone</th>
+                <th class="border"></th>
               </thead>
               <tbody>
                 <tr v-for="client in clients" class="">
@@ -45,6 +46,9 @@ defineProps(['clients'])
                   <td class="border">{{ client.name }}</td>
                   <td class="border">{{ client.email }}</td>
                   <td class="border">{{ client.phone }}</td>
+                  <td class="border">
+                    <Link :href="route('clients.edit', client.id)">Edit</Link>
+                  </td>
                 </tr>
               </tbody>
             </table>

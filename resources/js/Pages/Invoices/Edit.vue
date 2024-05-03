@@ -78,6 +78,7 @@ const getTotalCost = () => {
 };
 
 const { invoice } = toRefs(props);
+console.log(props.invoice)
 
 let form = reactive({
   date: invoice

@@ -75,6 +75,7 @@ let form = reactive({
   date: formatDate(Date.now(), "YYYY-MM-DD"),
   due_date: formatDate(Date.now(), "YYYY-MM-DD"),
   client_id: 1,
+  client_name: "",
   company_id: 1,
   invoice_no: "",
   details: "",
@@ -96,7 +97,7 @@ function submit() {
   router.post(route('invoices.store'), form, {
     onError: (err) => {
       console.log(err);
-      toast.error("Error while saving");
+      alert("Error while saving");
     },
     onSuccess: (data) => {
       toast("Success", {

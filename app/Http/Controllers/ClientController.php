@@ -3,7 +3,9 @@
 namespace App\Http\Controllers;
 
 use App\Models\Client;
+use Exception;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Inertia\Inertia;
 
 class ClientController extends Controller
@@ -23,7 +25,9 @@ class ClientController extends Controller
    */
   public function create()
   {
-    //
+    return Inertia::render('Clients/New', [
+      'clients' => Client::all(),
+    ]);
   }
 
   /**
@@ -31,7 +35,17 @@ class ClientController extends Controller
    */
   public function store(Request $request)
   {
-    //
+    $request->validate([
+      "name" => 'required|string',
+    ]);
+
+    DB::beginTransaction();
+
+    $client = Client::create($request->all());
+
+    DB::commit();
+
+    return redirect('/clients');
   }
 
   /**
@@ -47,7 +61,9 @@ class ClientController extends Controller
    */
   public function edit(Client $client)
   {
-    //
+    return Inertia::render('Clients/Edit', [
+      'client' => $client,
+    ]);
   }
 
   /**
@@ -55,7 +71,13 @@ class ClientController extends Controller
    */
   public function update(Request $request, Client $client)
   {
-    //
+    $request->validate([
+      "name" => 'required|string',
+    ]);
+
+    $client->update($request->all());
+
+    return redirect('/clients');
   }
 
   /**
