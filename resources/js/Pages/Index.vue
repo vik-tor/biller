@@ -10,7 +10,7 @@ import { Head, Link } from '@inertiajs/vue3';
 //     type: String,
 //   },
 // });
-defineProps(['invoices', 'message'])
+defineProps(['invoices'])
 </script>
 
 <template>
@@ -30,9 +30,36 @@ defineProps(['invoices', 'message'])
       <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
         <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
           <div class="" v-if="invoices">
-            <div class="p-6 text-gray-900">{{ invoices }}</div>
+            <table class="w-full border">
+              <thead class="bg-gray-200">
+                <th></th>
+                <th class="border">Invoice no</th>
+                <th class="border">Date</th>
+                <th class="border">Client</th>
+                <th class="border">Details</th>
+                <th class="border">Amount</th>
+                <th class="border">Due Date</th>
+                <th>Actions</th>
+              </thead>
+              <tbody>
+                <tr v-for="invoice in invoices" class="">
+                  <td><input type="checkbox" /></td>
+                  <td class="border">{{ invoice.invoice_no }}</td>
+                  <td class="border">{{ invoice.date }}</td>
+                  <td class="border">{{ invoice.client_id }}</td>
+                  <td class="border">{{ invoice.details }}</td>
+                  <td class="border">{{ invoice.amount }}</td>
+                  <td class="border">{{ invoice.due_date }}</td>
+                  <td class="border">
+                    <Link :href="route('invoices.edit', invoice.id)">Edit</Link>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
           </div>
-          <div class="p-6 text-gray-900">{{ message }}</div>
+          <div class="" v-else>
+            Add invoice to view
+          </div>
         </div>
       </div>
     </div>

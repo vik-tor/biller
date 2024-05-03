@@ -5,7 +5,10 @@ namespace App\Http\Controllers;
 use App\Models\Client;
 use App\Models\Company;
 use App\Models\Invoice;
+use App\Models\InvoiceLine;
+use Exception;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Inertia\Inertia;
 
 class InvoiceController extends Controller
@@ -34,7 +37,32 @@ class InvoiceController extends Controller
    */
   public function store(Request $request)
   {
+    $request->validate([
+      "date" => 'required|date',
+      "due_date" => 'required|date',
+      "client_id" => 'required|integer',
+      "company_id" => 'required|integer',
+      "invoice_no" => 'nullable|string',
+      "details" => 'nullable|string',
+      "terms" => 'nullable|string',
+      "payment_info" => 'nullable|string',
+    ]);
+
+    if (!$request->items) {
+      return new Exception('Add items to save order');
+    }
+
+    DB::beginTransaction();
+
     $invoice = Invoice::create($request->all());
+
+    foreach ($request->items as $item) {
+      $item['invoice_id'] = $invoice->id;
+      $item['company_id'] = $request->company_id;
+      InvoiceLine::create($item);
+    }
+
+    DB::commit();
 
     return $invoice;
   }
@@ -52,7 +80,11 @@ class InvoiceController extends Controller
    */
   public function edit(Invoice $invoice)
   {
-    //
+    return Inertia::render('Invoices/Edit', [
+      'clients' => Client::all(),
+      'companies' => Company::all(),
+      'invoice' => $invoice,
+    ]);
   }
 
   /**
@@ -60,7 +92,20 @@ class InvoiceController extends Controller
    */
   public function update(Request $request, Invoice $invoice)
   {
-    //
+    $request->validate([
+      "date" => 'required|date',
+      "due_date" => 'required|date',
+      "client_id" => 'required|integer',
+      "company_id" => 'required|integer',
+      "invoice_no" => 'nullable|string',
+      "details" => 'nullable|string',
+      "terms" => 'nullable|string',
+      "payment_info" => 'nullable|string',
+    ]);
+
+    $invoice->update($request->all());
+
+    return $invoice;
   }
 
   /**

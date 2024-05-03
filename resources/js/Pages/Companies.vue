@@ -31,6 +31,7 @@ defineProps(['companies'])
           <div class="" v-if="companies">
             <table class="w-full border">
               <thead class="bg-gray-200">
+                <th />
                 <th class="border">Name</th>
                 <th class="border">Tax Pin</th>
                 <th class="border">Location</th>
@@ -38,6 +39,7 @@ defineProps(['companies'])
               </thead>
               <tbody>
                 <tr v-for="company in companies" class="">
+                  <td><input type="checkbox" /></td>
                   <td class="border">{{ company.name }}</td>
                   <td class="border">{{ company.tax_pin }}</td>
                   <td class="border">{{ company.town }}, {{ company.country }}</td>

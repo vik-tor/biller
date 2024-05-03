@@ -29,6 +29,8 @@ function Item(particulars, unit_cost, quantity) {
   this.particulars = particulars;
   this.unit_cost = unit_cost;
   this.quantity = quantity;
+  this.subtotal = quantity * unit_cost
+  this.tax = 0
   this.total = quantity * unit_cost
 }
 
@@ -41,18 +43,23 @@ const countries = [
 defineProps(['clients', 'companies'])
 
 function addItem() {
-  if (draftItem.quantity == 0 || draftItem.quantity == null) draftItem.quantity = 1
-  let item = new Item(draftItem.particulars, draftItem.unit_cost, draftItem.quantity)
-  form.items = [...form.items, item];
+  if (draftItem.particulars == "" || draftItem.unit_cost == 0) {
+    alert('Item details required')
+    return
+  } else {
+    if (draftItem.quantity == 0 || draftItem.quantity == null) draftItem.quantity = 1
+    let item = new Item(draftItem.particulars, draftItem.unit_cost, draftItem.quantity)
+    form.items = [...form.items, item];
 
-  draftItem.particulars = ""
-  draftItem.unit_cost = null
-  draftItem.quantity = null
+    draftItem.particulars = ""
+    draftItem.unit_cost = null
+    draftItem.quantity = null
 
-  let total = getTotalCost();
-  console.log(total)
+    let total = getTotalCost();
+    console.log(total)
 
-  return;
+    return;
+  }
 };
 
 const getTotalCost = () => {
@@ -89,7 +96,7 @@ const reset = () => {
 };
 
 function submit() {
-  router.post(route('invoices.store'), {
+  router.post(route('invoices.store'), form, {
     onError: (err) => {
       console.log(err);
       toast.error("Error while saving");
@@ -124,7 +131,7 @@ function submit() {
           <option v-for="item in clients" :value="item.id">{{ item.name }}</option>
         </div>
 
-        <form @submit.prevent="submit" class="flex flex-col gap-3 p-4 rounded-md">
+        <form @submit.prevent="submit()" class="flex flex-col gap-3 p-4 rounded-md">
           <div class="flex flex-col gap-3">
             <div class="flex gap-2">
               <div class="flex flex-col w-full">
@@ -154,102 +161,103 @@ function submit() {
               </div>
               <div class="flex flex-col w-full">
                 <label>Details</label>
-                <input v-model="form.details" label="Details" required />
+                <input v-model="form.details" label="Details" />
               </div>
             </div>
           </div>
+
+
+          <div class="h-full overflow-auto flex flex-col gap-2 rounded-md">
+            <div class="">
+              Items
+            </div>
+            <table class="table border border-gray-300 bg-white rounded-lg rounded-b-md w-full">
+              <thead class="p-4 text-xs bg-gray-200 font-bold">
+                <th class="px-4 py-2 font-bold">Description</th>
+                <th class="px-4 py-2 font-bold">Unit cost</th>
+                <th class="px-4 py-2 font-bold">Quantity</th>
+                <th class="px-4 py-2 font-bold">Total</th>
+                <th class="px-4 py-2 font-bold" />
+              </thead>
+              <tbody>
+                <tr class="h-14">
+                  <td class="p-0 font-normal w-full">
+                    <input v-model="draftItem.particulars" class="w-full h-8 mx-2" placeholder="Item" />
+                  </td>
+                  <td class="p-0 font-normal">
+                    <input v-model="draftItem.unit_cost" type="number" class=" h-8 mx-2" placeholder="Cost" />
+                  </td>
+                  <td class="p-0 font-normal">
+                    <input v-model="draftItem.quantity" type="number" class=" h-8 mx-2" placeholder="Quantity" />
+                  </td>
+                  <td class="p-0 font-normal">
+                  </td>
+                  <td class="p-0 mx-auto">
+                    <a class="px-3 py-1 mr-1 block rounded bg-gray-300" @click="addItem()">
+                      <span class="text-gray-800">
+                        Save
+                      </span>
+                    </a>
+                  </td>
+                </tr>
+                <tr v-if="form.items.length > 0" v-for="(item, index) in form.items">
+                  <td class="p-0 font-normal">
+                    <div class="flex px-4 justify-start">
+                      {{ item.particulars }}
+                    </div>
+                  </td>
+                  <td class="p-0 font-normal">
+                    <div class="flex px-4">
+                      {{ item.unit_cost }}
+                    </div>
+                  </td>
+                  <td class="p-0 font-normal">
+                    <div class="flex px-4">
+                      {{ item.quantity }}
+                    </div>
+                  </td>
+                  <td class="p-0 font-normal">
+                    <div class="flex px-4">
+                      {{ item.total }}
+                    </div>
+                  </td>
+                </tr>
+
+              </tbody>
+              <tfoot v-if="form.items.length > 0">
+                <tr class="font-semibold text-gray-900 dark:text-white">
+                  <th scope="row" class="py-3 px-6 text-base" />
+                  <td class=""></td>
+                  <td class=""></td>
+                  <td class="">{{ invoiceTotal }}</td>
+                  <td class="py-3 px-2" />
+                </tr>
+              </tfoot>
+            </table>
+          </div>
+
+          <div class="w-full">
+            <div class="flex flex-col gap-2">
+              <div class="flex flex-col w-full">
+                <label>Invoice Terms</label>
+                <textarea v-model="form.terms" label="Invoice No." />
+              </div>
+              <div class="flex flex-col w-full">
+                <label>Payment information</label>
+                <textarea v-model="form.payment_info" />
+              </div>
+            </div>
+          </div>
+
+          <div class="flex items-center justify-end gap-2 mt-6 p-4">
+            <button class="bg-gray-200 px-4 py-2 rounded">
+              Cancel
+            </button>
+            <button class="bg-gray-800 text-white px-4 py-2 rounded" type="submit">
+              Save
+            </button>
+          </div>
         </form>
-
-        <div class="h-full overflow-auto flex flex-col gap-2 rounded-md p-4">
-          <div class="">
-            Items
-          </div>
-          <table class="table border border-gray-300 bg-white rounded-lg rounded-b-md w-full">
-            <thead class="p-4 text-xs bg-gray-200 font-bold">
-              <th class="px-4 py-2 font-bold">Description</th>
-              <th class="px-4 py-2 font-bold">Unit cost</th>
-              <th class="px-4 py-2 font-bold">Quantity</th>
-              <th class="px-4 py-2 font-bold">Total</th>
-              <th class="px-4 py-2 font-bold" />
-            </thead>
-            <tbody>
-              <tr class="h-14">
-                <td class="p-0 font-normal w-full">
-                  <input v-model="draftItem.particulars" class="w-full h-8 mx-2" placeholder="Item" required />
-                </td>
-                <td class="p-0 font-normal">
-                  <input v-model="draftItem.unit_cost" type="number" class=" h-8 mx-2" placeholder="Cost" required />
-                </td>
-                <td class="p-0 font-normal">
-                  <input v-model="draftItem.quantity" type="number" class=" h-8 mx-2" placeholder="Quantity" required />
-                </td>
-                <td class="p-0 font-normal">
-                </td>
-                <td class="p-0 mx-auto">
-                  <button class="px-3 py-1 m-1 rounded bg-gray-300" @click="addItem()">
-                    <span class="text-gray-800">
-                      Save
-                    </span>
-                  </button>
-                </td>
-              </tr>
-              <tr v-if="form.items.length > 0" v-for="(item, index) in form.items">
-                <td class="p-0 font-normal">
-                  <div class="flex px-4 justify-start">
-                    {{ item.particulars }}
-                  </div>
-                </td>
-                <td class="p-0 font-normal">
-                  <div class="flex px-4">
-                    {{ item.unit_cost }}
-                  </div>
-                </td>
-                <td class="p-0 font-normal">
-                  <div class="flex px-4">
-                    {{ item.quantity }}
-                  </div>
-                </td>
-                <td class="p-0 font-normal">
-                  <div class="flex px-4">
-                    {{ item.total }}
-                  </div>
-                </td>
-              </tr>
-
-            </tbody>
-            <tfoot v-if="form.items.length > 0">
-              <tr class="font-semibold text-gray-900 dark:text-white">
-                <th scope="row" class="py-3 px-6 text-base" />
-                <td class=""></td>
-                <td class=""></td>
-                <td class="">{{ invoiceTotal }}</td>
-                <td class="py-3 px-2" />
-              </tr>
-            </tfoot>
-          </table>
-        </div>
-
-        <div class="w-full p-4">
-          <div class="flex flex-col gap-2">
-            <div class="flex flex-col w-full">
-              <label>Invoice Terms</label>
-              <textarea v-model="form.terms" label="Invoice No." />
-            </div>
-            <div class="flex flex-col w-full">
-              <label>Payment information</label>
-              <textarea v-model="form.payment_info" />
-            </div>
-          </div>
-        </div>
-
-        <div class="flex items-center justify-end gap-2 mt-6 p-4">
-          <button class="bg-gray-200 px-4 py-2 rounded">
-            Cancel
-          </button>
-          <button class="bg-gray-800 text-white px-4 py-2 rounded">
-            Save
-          </button>
-        </div>
       </div>
 
     </div>

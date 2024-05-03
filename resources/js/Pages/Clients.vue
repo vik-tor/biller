@@ -32,6 +32,7 @@ defineProps(['clients'])
           <div class="" v-if="clients">
             <table class="w-full border">
               <thead class="bg-gray-200">
+                <th />
                 <th class="border">A/c no</th>
                 <th class="border">Name</th>
                 <th class="border">Email</th>
@@ -39,6 +40,7 @@ defineProps(['clients'])
               </thead>
               <tbody>
                 <tr v-for="client in clients" class="">
+                  <td><input type="checkbox" /></td>
                   <td class="border">{{ client.account_number }}</td>
                   <td class="border">{{ client.name }}</td>
                   <td class="border">{{ client.email }}</td>
