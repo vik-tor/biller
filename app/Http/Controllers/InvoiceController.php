@@ -34,7 +34,9 @@ class InvoiceController extends Controller
    */
   public function store(Request $request)
   {
-    //
+    $invoice = Invoice::create($request->all());
+
+    return $invoice;
   }
 
   /**
