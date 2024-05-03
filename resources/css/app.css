@@ -1,0 +1,11 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+input,
+select,
+textarea,
+[type="date"],
+[type="number"] {
+  @apply border border-gray-300 outline-none rounded-lg;
+}
